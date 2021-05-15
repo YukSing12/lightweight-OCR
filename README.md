@@ -8,15 +8,29 @@ The overall directory structure of SBCR(Steel Billet Character Recognition) is i
 
 ```
 lightweight-OCR   
-├── 1833844.ipynb   
-├── [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)   
-├── [PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)  
-├── data   
-│   ├── data8429   
-│   └── train.list   
-└── work   
-    ├── label_dict.txt   
-    └── label.txt   
+├── 1833844.ipynb
+├── data
+│   ├── data87683
+│   └── data87685
+├── output
+├── PaddleOCR
+├── PaddleSlim
+├── README.md
+└── work
+    ├── configs
+    ├── label_dict.txt
+    ├── label.txt
+    ├── ppocr
+    │   └── modeling
+    │       ├── backbones
+    │       │   └── rec_rednet_vd.py
+    │       └── necks
+    │           └── rnn.py
+    └── tools
+        ├── egaleeye_prune.py
+        ├── infer_rec.py
+        ├── prune.py
+        └── train.py
 ```
 
 ## Todo list    
