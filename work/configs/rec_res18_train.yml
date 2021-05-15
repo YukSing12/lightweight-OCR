@@ -1,12 +1,12 @@
 Global:
   use_gpu: True
-  epoch_num: 30
+  epoch_num: 200
   log_smooth_window: 20
-  print_batch_step: 1
+  print_batch_step: 100
   save_model_dir: /home/aistudio/output/rec_res18_train
-  save_epoch_step: 30
+  save_epoch_step: 40
   # evaluation is run every 0 iterations after the 1250th iteration
-  eval_batch_step: [0, 40000]
+  eval_batch_step: [150000, 5000]
   cal_metric_during_train: True
   pretrained_model:
   checkpoints:
@@ -16,9 +16,9 @@ Global:
   # for data or label process
   character_dict_path: /home/aistudio/work/label_dict.txt
   character_type: ch
-  max_text_length: 83
+  max_text_length: 24
   infer_mode: False
-  use_space_char: False
+  use_space_char: True
 
 
 Optimizer:
@@ -27,10 +27,10 @@ Optimizer:
   beta2: 0.999
   lr:
     name: Cosine
-    learning_rate: 0.0005
+    learning_rate: 0.001
   regularizer:
     name: 'L2'
-    factor: 0.00004
+    factor: 0.00001
 
 Architecture:
   model_type: rec
@@ -42,10 +42,10 @@ Architecture:
   Neck:
     name: SequenceEncoder
     encoder_type: rnn
-    hidden_size: 128
+    hidden_size: 64
   Head:
     name: CTCHead
-    fc_decay: 0.00004
+    fc_decay: 0.00001
 
 Loss:
   name: CTCLoss
@@ -60,8 +60,8 @@ Metric:
 Train:
   dataset:
     name: SimpleDataSet
-    data_dir: /home/aistudio/data
-    label_file_list: ["/home/aistudio/data/rec/rec_gt_train.txt"]
+    data_dir: /home/aistudio/rec/train
+    label_file_list: ["/home/aistudio/rec/rec_gt_train.txt"]
     transforms:
       - DecodeImage: # load image
           img_mode: BGR
@@ -74,7 +74,7 @@ Train:
           keep_keys: ['image', 'label', 'length'] # dataloader will return list in this order
   loader:
     shuffle: True
-    batch_size_per_card: 256
+    batch_size_per_card: 64
     drop_last: True
     num_workers: 8
     use_shared_memory: False
@@ -82,8 +82,8 @@ Train:
 Eval:
   dataset:
     name: SimpleDataSet
-    data_dir: /home/aistudio/data
-    label_file_list: ["/home/aistudio/data/rec/rec_gt_eval.txt"]
+    data_dir: /home/aistudio/rec/eval
+    label_file_list: ["/home/aistudio/rec/rec_gt_eval.txt"]
     transforms:
       - DecodeImage: # load image
           img_mode: BGR
@@ -96,6 +96,6 @@ Eval:
   loader:
     shuffle: False
     drop_last: False
-    batch_size_per_card: 256
+    batch_size_per_card: 512
     num_workers: 8
     use_shared_memory: False

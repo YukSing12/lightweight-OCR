@@ -1,18 +1,18 @@
 Global:
   use_gpu: true
-  epoch_num: 100
+  epoch_num: 125
   log_smooth_window: 20
-  print_batch_step: 10
-  save_model_dir: /home/aistudio/output/rec_mobilev3_train2
+  print_batch_step: 100
+  save_model_dir: /home/aistudio/output/rec_mobilev3_1.0_train
   save_epoch_step: 25
-  # evaluation is run every 5000 iterations after the 4000th iteration
-  eval_batch_step: [0, 40000]
+  # evaluation is run every 5000 iterations after the 100000th iteration
+  eval_batch_step: [100000, 2500]
   cal_metric_during_train: True
-  pretrained_model: /home/aistudio/output/rec_mobilev3_train/best_accuracy
+  pretrained_model: 
   checkpoints: 
-  save_inference_dir: /home/aistudio/output/rec_mobilev3_train2
+  save_inference_dir: /home/aistudio/output/rec_mobilev3_1.0_train
   use_visualdl: False
-  infer_img: /home/aistudio/data/test_images/A榜测试数据集/TestAImages
+  infer_img: 
   # for data or label process
   character_dict_path: /home/aistudio/work/label_dict.txt
   character_type: ch
@@ -27,10 +27,11 @@ Optimizer:
   beta2: 0.999
   lr:
     name: Cosine
-    learning_rate: 0.02
+    learning_rate: 0.001
+    warmup_epoch: 2
   regularizer:
     name: 'L2'
-    factor: 0.00001
+    factor: 0.000001
 
 Architecture:
   model_type: rec
@@ -44,7 +45,7 @@ Architecture:
   Neck:
     name: SequenceEncoder
     encoder_type: rnn
-    hidden_size: 48
+    hidden_size: 64
   Head:
     name: CTCHead
     fc_decay: 0.00001
@@ -62,8 +63,8 @@ Metric:
 Train:
   dataset:
     name: SimpleDataSet
-    data_dir: /home/aistudio/data/rec/train
-    label_file_list: ["/home/aistudio/data/rec/rec_gt_train.txt"]
+    data_dir: /home/aistudio/rec/train
+    label_file_list: ["/home/aistudio/rec/rec_gt_train.txt"]
     transforms:
       - DecodeImage: # load image
           img_mode: BGR
@@ -76,7 +77,7 @@ Train:
           keep_keys: ['image', 'label', 'length'] # dataloader will return list in this order
   loader:
     shuffle: True
-    batch_size_per_card: 512
+    batch_size_per_card: 64
     drop_last: True
     num_workers: 8
     use_shared_memory: False
@@ -84,8 +85,8 @@ Train:
 Eval:
   dataset:
     name: SimpleDataSet
-    data_dir: /home/aistudio/data/rec/eval
-    label_file_list: ["/home/aistudio/data/rec/rec_gt_eval.txt"]
+    data_dir: /home/aistudio/rec/eval
+    label_file_list: ["/home/aistudio/rec/rec_gt_eval.txt"]
     transforms:
       - DecodeImage: # load image
           img_mode: BGR
