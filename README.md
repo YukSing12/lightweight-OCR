@@ -59,7 +59,7 @@ python PaddleOCR/tools/eval.py -c work/configs/rec_mobilev3_0.75_train.yml -o Gl
 ### Test:
 Run command
 ```
-python PaddleOCR/tools/infer_rec.py -c work/configs/rec_mobilev3_0.75_train.yml -o Global.checkpoints=./output/mobilev3_0.75_48/latest
+python PaddleOCR/tools/infer_rec.py -c work/configs/rec_mobilev3_0.75_train.yml -o Global.checkpoints=./output/mobilev3_0.75_48/latest Global.infer_img=./data/test_images/A榜测试数据集/TestAImages
 ```
 result file will be saved in ~/output/%Y-%m-%d-%H-%M-%S.log.
 
