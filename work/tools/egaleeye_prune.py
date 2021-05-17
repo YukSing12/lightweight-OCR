@@ -21,12 +21,14 @@ import sys
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
-sys.path.append(os.path.abspath(os.path.join(__dir__, '..', 'PaddleSlim')))
-sys.path.append(os.path.abspath(os.path.join(__dir__, '..', 'PaddleOCR')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '..', '..', 'PaddleSlim')))
 
 from ppocr.data import build_dataloader
 from ppocr.modeling.architectures import build_model
 from ppocr.postprocess import build_post_process
+from ppocr.losses import build_loss
+from ppocr.optimizer import build_optimizer
 from ppocr.metrics import build_metric
 from ppocr.utils.save_load import init_model
 from ppocr.utils.utility import print_dict
@@ -38,8 +40,26 @@ import numpy as np
 from paddleslim.dygraph import FPGMFilterPruner
 from paddleslim.analysis import dygraph_flops as flops
 from paddleslim.analysis import model_size
+from tqdm import tqdm
 
+def get_size(file_path):
+    """ Get size of file or directory.
 
+    Args:
+        file_path(str): Path of file or directory.
+
+    Returns: 
+        size(int): Size of file or directory in bits.
+    """
+    size = 0
+    if os.path.isdir(file_path):
+        for root, dirs, files in os.walk(file_path):
+            for f in files:
+                size += os.path.getsize(os.path.join(root, f))
+    elif os.path.isfile(file_path):
+        size = (os.path.getsize(file_path))
+    return size
+    
 def main():
     global_config = config['Global']
     # build dataloader
@@ -83,13 +103,29 @@ def main():
             "No checkpoints or pretrained_model found.\n"
         )
         return
-        
+    # build loss
+    loss_class = build_loss(config['Loss'])
+
+    # build optim
+    optimizer, lr_scheduler = build_optimizer(
+        config['Optimizer'],
+        epochs=config['Global']['epoch_num'],
+        step_each_epoch=len(train_dataloader),
+        parameters=model.parameters())
+
+    # build metric
+    eval_class = build_metric(config['Metric'])
+    
+    # load pretrain model
+    checkpoints = global_config.get('checkpoints')
+    config['Global']['checkpoints'] = None
     best_model_dict = init_model(config, model, logger)
+    config['Global']['checkpoints'] = checkpoints
 
     logger.info("Model before pruning: ")
     summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
     baseline_metric = {}
-    baseline_metric['acc'] = best_model_dict['acc']                      
+    baseline_metric['acc'] = best_model_dict.get('acc')          
     baseline_metric['flops'] = flops(model, [1, shape[0], shape[1], shape[2]])
     baseline_metric['params'] = summary_dict['total_params']
 
@@ -102,16 +138,18 @@ def main():
     FILTER_DIM = [0]
 
     # condition
-    condition = "params"
-    target = 0.3
+    condition = "flops"
+    assert condition in ["acc", "flops", "params"]
+    target = 0.2
 
     while(True):
         # random pruning startegy
         max_rate = 0.95
         min_rate = 0
         ratios = {}
+        skip_vars = ['conv_last_weights']
         # skip_vars = ['res5b_branch2b_weights','res5b_branch2a_weights','res5a_branch2b_weights','res5a_branch1_weights']
-        skip_vars = ['res5a_branch2b_weights','res5a_branch1_weights']
+        # skip_vars = ['res5a_branch2b_weights','res5a_branch1_weights']
         pruner.skip_vars = skip_vars
         for group in pruner.var_group.groups:
             var_name = group[0][0]
@@ -127,11 +165,14 @@ def main():
         model.train()
         max_iter = int(train_dataloader.batch_sampler.total_size / 30 / train_dataloader.batch_sampler.batch_size)
         with paddle.no_grad():
+            pbar = tqdm(total=max_iter, desc='adaptiveBN model:')
             for idx, batch in enumerate(train_dataloader):
-                model.forward(batch[0])
                 if idx > max_iter:
                     break
-
+                model.forward(batch[0])
+                pbar.update(1)
+        pbar.close()
+        
         # Eval
         eval_metric = program.eval(model, valid_dataloader, post_process_class,
                             eval_class, use_srn)
@@ -147,10 +188,29 @@ def main():
 
         ratio = (baseline_metric[condition] - pruned_metric[condition]) / baseline_metric[condition]
         logger.info('ratio:{}'.format(ratio))
-        if ratio > target:
+        if ratio > target: # For acc
+            logger.info('Save model')
             break
         else:
+            logger.info('Restore model')
             plan.restore(model)
+
+    # Finetune
+    if global_config.get('checkpoints'):
+        checkpoints_model_dict = init_model(config, model, logger, optimizer)
+        if len(checkpoints_model_dict):
+            logger.info('metric in ckpt ***************')
+            for k, v in checkpoints_model_dict.items():
+                logger.info('{}:{}'.format(k, v))
+    else:
+        checkpoints_model_dict = {}
+
+    logger.info("Model after pruning: ")
+    summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
+
+    program.train(config, train_dataloader, valid_dataloader, device, model,
+                  loss_class, optimizer, lr_scheduler, post_process_class,
+                  eval_class, checkpoints_model_dict, logger, vdl_writer)
 
     # Save
     model.eval()
@@ -166,7 +226,9 @@ def main():
     paddle.jit.save(model, save_path)
     logger.info('inference model is saved to {}'.format(save_path))
 
-        
+    # Calculate model size
+    model_size = get_size(os.path.join(save_path + '.pdiparams')) + get_size(os.path.join(save_path + '.pdmodel'))
+    logger.info('pruned model size is {}'.format(model_size))    
         
 
 if __name__ == '__main__':

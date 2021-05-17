@@ -109,6 +109,7 @@ def main():
                 # logger.info('\t result: {}'.format(rec_reuslt))
                 path = file.replace(global_config['infer_img'],"")
                 path = path.replace("\\","")
+                path = path.replace("/","")
                 text = "{}\t{}\n".format(path, rec_reuslt[0])
                 rst.write(text)
     logger.info("success!")
