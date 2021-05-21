@@ -57,13 +57,13 @@ Run command
 python PaddleOCR/tools/eval.py -c work/configs/rec_mobilev3_0.75_train.yml -o Global.checkpoints=./output/mobilev3_0.75_48/latest
 ```
 ### Test:
-Run command
+Change 'rec_model_dir' and run command
 ```
-python PaddleOCR/tools/infer_rec.py -c work/configs/rec_mobilev3_0.75_train.yml -o Global.checkpoints=./output/mobilev3_0.75_48/latest Global.infer_img=./data/test_images/A榜测试数据集/TestAImages
+python PaddleOCR/tools/infer/predict_rec.py --image_dir=./data/test_images/A榜测试数据集/TestAImages/ --rec_char_dict_path=./work/label_dict.txt --rec_model_dir=./output/rec_mobilev3_small_1.0/
 ```
-result file will be saved in ~/output/%Y-%m-%d-%H-%M-%S.log.
+result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 
 ## Performance
-|Model|Backbone|Neck|Trick|Socre|Model Size|
-|---|---|---|---|---|---|
-|CRNN|MobileNetV3-small-1.0|48GRU|None|0.6836|6.9MB|
+|Model|Backbone|Neck|Trick|Socre|Model Size|Model Link|
+|---|---|---|---|---|---|---|
+|CRNN|MobileNetV3-small-1.0|48GRU|None|0.6836|6.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_small_1.0)|
