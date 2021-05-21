@@ -63,3 +63,7 @@ python PaddleOCR/tools/infer_rec.py -c work/configs/rec_mobilev3_0.75_train.yml 
 ```
 result file will be saved in ~/output/%Y-%m-%d-%H-%M-%S.log.
 
+## Performance
+|Model|Backbone|Neck|Trick|Socre|Model Size|
+|---|---|---|---|---|---|
+|CRNN|MobileNetV3-small-1.0|48GRU|None|0.6836|6.9MB|
