@@ -84,7 +84,7 @@ class BottleneckBlock(nn.Layer):
             kernel_size=1,
             act='relu',
             name=name + "_branch2a")
-        self.conv1 = involution(out_channels, 3, stride, name + "_invo_branch2b")
+        self.conv1 = involution(out_channels, 7, stride, name=name + "_invo_branch2b")
         if name == "conv1":
             bn_name = "bn_" + name + "_invo_branch2b"
         else:
@@ -147,29 +147,15 @@ class BasicBlock(nn.Layer):
         super(BasicBlock, self).__init__()
         self.stride = stride
         self.invo = in_channels == out_channels
-        if self.invo:
-            self.conv0 = involution(out_channels, 3, stride, name + "_invo_branch2a")
-            if name == "conv1":
-                bn_name = "bn_" + name + "_invo_branch2a"
-            else:
-                bn_name = "bn" + name[3:] + "_invo_branch2a"
-            self.bn0 = nn.BatchNorm(
-                out_channels,
-                act='relu',
-                param_attr=ParamAttr(name=bn_name + '_scale'),
-                bias_attr=ParamAttr(bn_name + '_offset'),
-                moving_mean_name=bn_name + '_mean',
-                moving_variance_name=bn_name + '_variance')
-        else:
-            self.conv0 = ConvBNLayer(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=3,
-                stride=stride,
-                act='relu',
-                name=name + "_branch2a")
+        self.conv0 = ConvBNLayer(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=3,
+            stride=stride,
+            act='relu',
+            name=name + "_branch2a")
 
-        self.conv1 = involution(out_channels, 3, (1, 1), name + "_invo_branch2b")
+        self.conv1 = involution(out_channels, 7, (1, 1), name=name + "_invo_branch2b")
         if name == "conv1":
             bn_name = "bn_" + name + "_invo_branch2b"
         else:
@@ -200,11 +186,7 @@ class BasicBlock(nn.Layer):
         self.shortcut = shortcut
 
     def forward(self, inputs):
-        if self.invo:
-            y = self.conv0(inputs)
-            y = self.bn0(y)
-        else:
-            y = self.conv0(inputs)
+        y = self.conv0(inputs)
         conv1 = self.conv1(y)
         conv1 = self.bn1(conv1)
         if self.shortcut:
@@ -249,7 +231,7 @@ class RedNet(nn.Layer):
             act='relu',
             name="conv1_1")
 
-        self.conv1_2 = involution(32, 3, (1, 1), "conv1_2")
+        self.conv1_2 = involution(32, 3, (1, 1), name="conv1_2")
         self.bn1_2 = nn.BatchNorm(
             32,
             act='relu',
@@ -344,37 +326,30 @@ class involution(nn.Layer):
 
     def __init__(self,
                  channels,
-                 kernel_size,
-                 stride,
+                 kernel_size=3,
+                 stride=1,
+                 reduction_ratio=4,
+                 group_channels=16,
                  name=None):
         super(involution, self).__init__()
+        # Save parameters
         self.kernel_size = kernel_size
-        self.stride = stride
+        self.stride = stride if isinstance(stride, tuple) else (stride, stride)
         self.channels = channels
-        reduction_ratio = 4
-        self.group_channels = 16
+        self.reduction_ratio = reduction_ratio
+        self.group_channels = group_channels
         self.groups = self.channels // self.group_channels
-        self.conv1 = ConvBNLayer(
-            in_channels=channels,
-            out_channels=channels // reduction_ratio,
-            kernel_size=1,
-            act='relu',
-            name=name + "_reduce")
-        self.conv2 = ConvBNLayer(
-            in_channels=channels // reduction_ratio,
-            out_channels=kernel_size**2 * self.groups,
-            kernel_size=1,
-            act=None,
-            name=name + "_span")
-        if isinstance(stride, int):
-            if stride > 1:
-                self.avgpool = nn.AvgPool2D(stride, stride)
-        elif isinstance(stride, tuple):
-            if stride != (1,1):
-                self.avgpool = nn.AvgPool2D(stride)
+        # Init model
+        self.reduce = nn.Sequential(
+            nn.Conv2D(channels, channels // reduction_ratio, 1, bias_attr=False),
+            nn.BatchNorm(channels // reduction_ratio),
+            nn.ReLU())
+        self.span = nn.Conv2D(channels // reduction_ratio, kernel_size * kernel_size * self.groups, 1)
+        if stride != (1,1):
+            self.avgpool = nn.AvgPool2D(stride)
 
     def forward(self, x):
-        weight = self.conv2(self.conv1(x if not hasattr(self, 'avgpool') else self.avgpool(x)))
+        weight = self.span(self.reduce(x if not hasattr(self, 'avgpool') else self.avgpool(x)))
         b, c, h, w = weight.shape
         weight = paddle.reshape(weight, shape=[b, self.groups, self.kernel_size**2, h, w]).unsqueeze(2)
         out = F.unfold(x, self.kernel_size, dilations=1, paddings=(self.kernel_size-1)//2, strides=list(self.stride))
@@ -382,3 +357,22 @@ class involution(nn.Layer):
         out = paddle.sum((weight * out), axis=3)
         out = paddle.reshape(out, shape=[b, self.channels, h, w])
         return out
+
+if __name__ == "__main__":
+    # Test involution model
+    inv = involution(128, 7, (2,1))
+
+    paddle.summary(inv, (1, 128, 64, 64))
+
+    out = inv(paddle.randn((1, 128, 64, 64)))
+
+    print(out.shape)
+
+    # Test RedNet
+    model = RedNet(layers=26)
+
+    paddle.summary(model, (1, 3, 32, 160))
+
+    out = model(paddle.randn((1, 3, 32, 160)))
+
+    print(out.shape)
