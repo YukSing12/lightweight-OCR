@@ -147,9 +147,9 @@ def main():
         max_rate = 0.95
         min_rate = 0
         ratios = {}
-        skip_vars = ['conv_last_weights']
+        skip_vars = ['conv_last_weights'] # for mobilenetv3
         # skip_vars = ['res5b_branch2b_weights','res5b_branch2a_weights','res5a_branch2b_weights','res5a_branch1_weights']
-        # skip_vars = ['res5a_branch2b_weights','res5a_branch1_weights']
+        # skip_vars = ['res5a_branch2b_weights','res5a_branch1_weights'] # for resnet
         pruner.skip_vars = skip_vars
         for group in pruner.var_group.groups:
             var_name = group[0][0]
@@ -211,10 +211,19 @@ def main():
     program.train(config, train_dataloader, valid_dataloader, device, model,
                   loss_class, optimizer, lr_scheduler, post_process_class,
                   eval_class, checkpoints_model_dict, logger, vdl_writer)
+                  
+    # Eval after finetune
+    metric = program.eval(model, valid_dataloader, post_process_class,
+                          eval_class, use_srn)
+    logger.info('metric finetune ***************')
+    for k, v in metric.items():
+        logger.info('{}:{}'.format(k, v))
+    logger.info("Model after finetune: ")   
+    summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
 
     # Save
     model.eval()
-    save_path = '{}/inference'.format(config['Global']['save_inference_dir'])
+    save_path = '{}/prune'.format(config['Global']['save_model_dir'])
 
     infer_shape = [3, 32, -1]  # for rec model, H must be 32
     model = to_static(
@@ -224,11 +233,11 @@ def main():
                 shape=[None] + infer_shape, dtype='float32')
         ])
     paddle.jit.save(model, save_path)
-    logger.info('inference model is saved to {}'.format(save_path))
-
+    logger.info('pruned model is saved to {}'.format(save_path))
+    
     # Calculate model size
     model_size = get_size(os.path.join(save_path + '.pdiparams')) + get_size(os.path.join(save_path + '.pdmodel'))
-    logger.info('pruned model size is {}'.format(model_size))    
+    logger.info('pruned model size is {}'.format(model_size))
         
 
 if __name__ == '__main__':

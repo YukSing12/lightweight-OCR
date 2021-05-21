@@ -61,7 +61,7 @@ def main():
     global_config = config['Global']
     # build dataloader
     train_dataloader = build_dataloader(config, 'Train', device, logger)
-    config['Train']['loader']['num_workers'] = 0
+    config['Train']['loader']['num_workers'] = 1
     if len(train_dataloader) == 0:
         logger.error(
             "No Images in train dataset, please ensure\n" +
@@ -134,7 +134,7 @@ def main():
         logger.info('{}:{}'.format(k, v))
 
     # baseline
-    baseline = metric['acc']
+    baseline = metric.get('acc')
     logger.info('baseline is {}'.format(baseline))
 
     # pruner
@@ -162,17 +162,19 @@ def main():
         return metric
     
     sen = pruner.sensitive(eval_func=eval_fn, sen_file="./output/fpgm_sen_bn.pickle")
-    logger.info('sensitive ***************')
-    for k, v in sen.items():
-        logger.info('{}:{}'.format(k, v))
+    # logger.info('sensitive ***************')
+    # for k, v in sen.items():
+    #     logger.info('{}:{}'.format(k, v))
 
-    pruned_flops = 0.5
-    skip_vars = ["conv_last_weights"]
+    pruned_flops = global_config.get('pruned_flops')
+    # skip_vars = ['conv_last_weights'] # for mobilenetv3
+    skip_vars = ['res5a_branch2b_weights','res5a_branch1_weights'] # for resnet
     logger.info('pruning {}% FLOPs and skip {} layer'.format(pruned_flops*100, skip_vars))
     plan = pruner.sensitive_prune(pruned_flops, skip_vars=skip_vars)
     
     # Finetune
     if global_config.get('checkpoints'):
+        logger.info("Load model in checkpoints: ")
         checkpoints_model_dict = init_model(config, model, logger, optimizer)
         if len(checkpoints_model_dict):
             logger.info('metric in ckpt ***************')
@@ -194,6 +196,8 @@ def main():
     logger.info('metric finetune ***************')
     for k, v in metric.items():
         logger.info('{}:{}'.format(k, v))
+    logger.info("Model after finetune: ")   
+    summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
 
     # Save
     model.eval()
