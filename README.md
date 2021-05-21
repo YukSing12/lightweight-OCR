@@ -49,14 +49,20 @@ lightweight-OCR
 ### Train:
 Run command
 ```
-python PaddleOCR/tools/train.py -c work/configs/rec_mobilev3_0.75_train.yml
+python PaddleOCR/tools/train.py -c work/configs/rec_mobilev3_small_1_train
 ```
 ### Eval:
 Run command
 ```
-python PaddleOCR/tools/eval.py -c work/configs/rec_mobilev3_0.75_train.yml -o Global.checkpoints=./output/mobilev3_0.75_48/latest
+python PaddleOCR/tools/eval.py -c work/configs/rec_mobilev3_small_1_train -o Global.checkpoints=./output/rec_mobilev3_small_1.0/best_accuracy
 ```
 ### Test:
+Run command to export inference model
+```
+python PaddleOCR/tools/export.py -c work/config/rec_mobilev3_small_1_train.yml -o Global.checkpoints=./output/rec_mobilev3_small_1.0/best_accuracy Global.save_inference_dir=./output/rec_mobilev3_small_1.0/
+```
+inference model will be exported in output/rec_mobilev3_small_1.0/inference
+
 Change 'rec_model_dir' and run command
 ```
 python PaddleOCR/tools/infer/predict_rec.py --image_dir=./data/test_images/A榜测试数据集/TestAImages/ --rec_char_dict_path=./work/label_dict.txt --rec_model_dir=./output/rec_mobilev3_small_1.0/
