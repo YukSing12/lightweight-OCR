@@ -73,3 +73,4 @@ result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 |Model|Backbone|Neck|Trick|Socre|Model Size|Model Link|
 |---|---|---|---|---|---|---|
 |CRNN|MobileNetV3-small-1.0|48GRU|None|0.6836|6.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_small_1.0)|
+|CRNN|ResNet18|64GRU|Prune 90% FLOPs|0.7177|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_prune_0.9)|
