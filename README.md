@@ -4,7 +4,7 @@
 Project of lightweight OCR contest.[[url]](https://aistudio.baidu.com/aistudio/competition/detail/75)
 
 ## Overall directory structure
-The overall directory structure of SBCR(Steel Billet Character Recognition) is introduced as follows:
+The overall directory structure of lightweight-OCR is introduced as follows:
 
 ```
 lightweight-OCR   
