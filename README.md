@@ -70,7 +70,7 @@ python PaddleOCR/tools/infer/predict_rec.py --image_dir=./data/test_images/Aæ¦œæ
 result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 
 ## Performance
-|Model|Backbone|Neck|Trick|Socre|Model Size|Model Link|
+|Algorithm|Backbone|Neck|Trick|Socre|Model Size|Model Link|
 |---|---|---|---|---|---|---|
 |CRNN|MobileNetV3-small-1.0|48GRU|None|0.6836|6.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48GRU|SE->CA|0.6786|5.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_ca_small_1.0)|
