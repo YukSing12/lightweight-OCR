@@ -22,6 +22,7 @@ import sys
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, '..', '..', 'work')))
 
 import yaml
 import paddle
@@ -37,6 +38,7 @@ from ppocr.postprocess import build_post_process
 from ppocr.metrics import build_metric
 from ppocr.utils.save_load import init_model
 import tools.program as program
+from model_summary import summary
 
 dist.get_world_size()
 
@@ -77,9 +79,29 @@ def main(config, device, logger, vdl_writer):
     if config['Global']['distributed']:
         model = paddle.DataParallel(model)
 
-    shape = config['Train']['dataset']['transforms'][3]['RecResizeImg']['image_shape']
-    paddle.summary(model, (1, shape[0], shape[1], shape[2]))
-    
+    # summary
+    use_srn = config['Architecture']['algorithm'] == "SRN"
+    if use_srn:
+        from ppocr.data.imaug.rec_img_aug import srn_other_inputs
+        shape = config['Train']['dataset']['transforms'][2]['SRNRecResizeImg']['image_shape']
+        num_heads = config['Architecture']['Head']['num_heads']
+        max_text_length = config['Architecture']['Head']['max_text_length']
+        others = srn_other_inputs(shape, num_heads, max_text_length)
+        input_size = []
+        input_size.append((1, shape[0], shape[1], shape[2]))
+        input_dtype = []
+        input_dtype.append('float32')
+        for item in others:
+            input_size.append((1,) + item.shape)
+        input_dtype.append('int64')
+        input_dtype.append('int64')
+        input_dtype.append('float32')
+        input_dtype.append('float32')
+        summary(model,input_size,input_dtype,logger)
+    else:
+        shape = config['Train']['dataset']['transforms'][3]['RecResizeImg']['image_shape']
+        paddle.summary(model, (1, shape[0], shape[1], shape[2]))
+
     # build loss
     loss_class = build_loss(config['Loss'])
 
