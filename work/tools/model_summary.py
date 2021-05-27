@@ -25,7 +25,7 @@ from collections import OrderedDict
 __all__ = ['summary']
 
 
-def summary(net, input_size, dtypes=None):
+def summary(net, input_size, dtypes=None, logger=None):
     """Prints a string summary of the network.
 
     Args:
@@ -147,7 +147,10 @@ def summary(net, input_size, dtypes=None):
 
     _input_size = _check_input(_input_size)
     result, params_info = summary_string(net, _input_size, dtypes)
-    print(result)
+    if logger:
+        logger.info(result)
+    else:
+        print(result)
 
     if in_train_mode:
         net.train()
