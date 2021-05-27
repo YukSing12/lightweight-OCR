@@ -21,8 +21,10 @@ class AconC(nn.Layer):
         self.add_parameter("p2", p2)
         self.add_parameter("beta", beta)
 
+        self.activation = nn.Sigmoid()
+
     def forward(self, x):
-        return (self.p1 * x - self.p2 * x) * F.sigmoid(self.beta * (self.p1 * x - self.p2 * x)) + self.p2 * x
+        return (self.p1 * x - self.p2 * x) * self.activation(self.beta * (self.p1 * x - self.p2 * x)) + self.p2 * x
 
 
 class MetaAconC(nn.Layer):
@@ -43,8 +45,10 @@ class MetaAconC(nn.Layer):
 
         self.add_parameter("p1", p1)
         self.add_parameter("p2", p2)
+        self.activation = nn.Sigmoid()
+
 
     def forward(self, x):
-        beta = F.sigmoid(
+        beta = self.activation(
             self.bn2(self.fc2(self.bn1(self.fc1(x.mean(axis=2, keepdim=True).mean(axis=3, keepdim=True))))))
-        return (self.p1 * x - self.p2 * x) * F.sigmoid(beta * (self.p1 * x - self.p2 * x)) + self.p2 * x
+        return (self.p1 * x - self.p2 * x) * self.activation(beta * (self.p1 * x - self.p2 * x)) + self.p2 * x
