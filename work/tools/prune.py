@@ -25,6 +25,7 @@ sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
 sys.path.append(os.path.abspath(os.path.join(__dir__, '..', '..', 'PaddleSlim')))
 
 from ppocr.data import build_dataloader
+from ppocr.data.imaug.rec_img_aug import srn_other_inputs
 from ppocr.modeling.architectures import build_model
 from ppocr.postprocess import build_post_process
 from ppocr.losses import build_loss
@@ -33,11 +34,12 @@ from ppocr.metrics import build_metric
 from ppocr.utils.save_load import init_model
 from ppocr.utils.utility import print_dict
 import tools.program as program
-
+from model_summary import summary
 import paddle
 from paddle.jit import to_static
 import numpy as np
 from paddleslim.dygraph import FPGMFilterPruner
+
 
 def get_size(file_path):
     """ Get size of file or directory.
@@ -59,7 +61,7 @@ def get_size(file_path):
 
 def main():
     global_config = config['Global']
-    # build dataloader
+    # Build dataloader
     train_dataloader = build_dataloader(config, 'Train', device, logger)
     config['Train']['loader']['num_workers'] = 1
     if len(train_dataloader) == 0:
@@ -81,67 +83,70 @@ def main():
         )
         return
 
-    # build post process
+    # Build post process
     post_process_class = build_post_process(config['PostProcess'],
                                             global_config)
 
-    # build model
+    # Build model
     # for rec algorithm
     if hasattr(post_process_class, 'character'):
         config['Architecture']["Head"]['out_channels'] = len(
             getattr(post_process_class, 'character'))
     model = build_model(config['Architecture'])
-    shape = config['Train']['dataset']['transforms'][3]['RecResizeImg']['image_shape']
-    use_srn = config['Architecture']['algorithm'] == "SRN"
-
-    if (not global_config.get('pretrained_model')):
-        logger.error(
-            "No pretrained_model found.\n"
-        )
-        return
-
-    # build loss
+    if config['Global']['distributed']:
+        model = paddle.DataParallel(model)
+        
+    # Build loss
     loss_class = build_loss(config['Loss'])
 
-    # build optim
+    # Build optim
     optimizer, lr_scheduler = build_optimizer(
         config['Optimizer'],
         epochs=config['Global']['epoch_num'],
         step_each_epoch=len(train_dataloader),
         parameters=model.parameters())
 
-    # build metric
+    # Build metric
     eval_class = build_metric(config['Metric'])
 
-    # load pretrain model
+    # Load pretrain model
+    if (not global_config.get('pretrained_model')):
+        logger.error(
+            "No pretrained_model found.\n"
+        )
+        return
     checkpoints = global_config.get('checkpoints')
     config['Global']['checkpoints'] = None
     pretrained_model_dict = init_model(config, model, logger)
     config['Global']['checkpoints'] = checkpoints
+
+    # summary
     logger.info("Model before pruning: ")
-    summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
+    use_srn = config['Architecture']['algorithm'] == "SRN"
+    if use_srn:
+        shape = config['Train']['dataset']['transforms'][2]['SRNRecResizeImg']['image_shape']
+        num_heads = config['Architecture']['Head']['num_heads']
+        max_text_length = config['Architecture']['Head']['max_text_length']
+        others = srn_other_inputs(shape, num_heads, max_text_length)
+        input_size = []
+        input_size.append((1, shape[0], shape[1], shape[2]))
+        input_dtype = ['float32','int64','int64','float32','float32']
+        for item in others:
+            input_size.append((1,) + item.shape)
+        summary(model,input_size,input_dtype,logger,use_srn)
+    else:
+        shape = config['Train']['dataset']['transforms'][3]['RecResizeImg']['image_shape']
+        summary(model, (1, shape[0], shape[1], shape[2]), logger=logger, use_srn=use_srn)
 
     if len(pretrained_model_dict):
         logger.info('metric in pretrained_model ***************')
         for k, v in pretrained_model_dict.items():
             logger.info('{}:{}'.format(k, v))
 
-    # start eval
-    metric = program.eval(model, valid_dataloader, post_process_class,
-                          eval_class, use_srn)
-    logger.info('metric eval ***************')
-    for k, v in metric.items():
-        logger.info('{}:{}'.format(k, v))
+    # Init pruner
+    pruner = FPGMFilterPruner(model.backbone, [1, shape[0], shape[1], shape[2]])
 
-    # baseline
-    baseline = metric.get('acc')
-    logger.info('baseline is {}'.format(baseline))
-
-    # pruner
-    shape = config['Train']['dataset']['transforms'][3]['RecResizeImg']['image_shape']
-    pruner = FPGMFilterPruner(model, [1, shape[0], shape[1], shape[2]])
-
-    # analyse sensitivity
+    # Analyse sensitivity
     # TODO: Fix memory leak.
     def eval_fn():
         # Adaptive-BN
@@ -158,17 +163,24 @@ def main():
                           eval_class, use_srn)
         metric = metric['acc']
 
-        # metric = program.adaptiveBN(model, train_dataloader, 100, valid_dataloader, post_process_class, eval_class, use_srn)
         return metric
     
-    sen = pruner.sensitive(eval_func=eval_fn, sen_file="./output/fpgm_sen_bn.pickle")
-    # logger.info('sensitive ***************')
-    # for k, v in sen.items():
-    #     logger.info('{}:{}'.format(k, v))
+    sen_file = global_config.get('sen_file')
+    if not sen_file:
+        logger.error(
+            "No sen_file found.\n"
+        )
+        return
+    pruned_flops = 0.5 if not global_config.get('pruned_flops') else global_config.get('pruned_flops')
+    skip_vars = [] if not global_config.get('skip_vars') else global_config.get('skip_vars')
+    sen = pruner.sensitive(eval_func=eval_fn, sen_file=sen_file,skip_vars=skip_vars)
+    for k, v in sen.items():
+        tmp = dict()
+        for ratio in v:
+            tmp[ratio] = round(v[ratio],3)
+        logger.info("{:<30}:{}".format(k,tmp))
 
-    pruned_flops = global_config.get('pruned_flops')
-    # skip_vars = ['conv_last_weights'] # for mobilenetv3
-    skip_vars = ['res5a_branch2b_weights','res5a_branch1_weights'] # for resnet
+
     logger.info('pruning {}% FLOPs and skip {} layer'.format(pruned_flops*100, skip_vars))
     plan = pruner.sensitive_prune(pruned_flops, skip_vars=skip_vars)
     
@@ -181,10 +193,20 @@ def main():
             for k, v in checkpoints_model_dict.items():
                 logger.info('{}:{}'.format(k, v))
     else:
+        pretrained_pruned_model = global_config.get('pretrained_pruned_model')
+        if pretrained_pruned_model:
+            logger.info("load pretrained model from {}".format(
+                pretrained_pruned_model))
+            pre_dict = paddle.load(pretrained_pruned_model + '.pdparams')
+            model.set_state_dict(pre_dict)
         checkpoints_model_dict = {}
-
+        
+    # summary
     logger.info("Model after pruning: ")
-    summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
+    if use_srn:
+        summary(model,input_size,input_dtype,logger,use_srn)
+    else:
+        summary(model, (1, shape[0], shape[1], shape[2]), logger=logger, use_srn=use_srn)
 
     program.train(config, train_dataloader, valid_dataloader, device, model,
                   loss_class, optimizer, lr_scheduler, post_process_class,
@@ -196,26 +218,6 @@ def main():
     logger.info('metric finetune ***************')
     for k, v in metric.items():
         logger.info('{}:{}'.format(k, v))
-    logger.info("Model after finetune: ")   
-    summary_dict = paddle.summary(model, (1, shape[0], shape[1], shape[2]))
-
-    # Save
-    model.eval()
-    save_path = '{}/prune'.format(config['Global']['save_model_dir'])
-
-    infer_shape = [3, 32, -1]  # for rec model, H must be 32
-    model = to_static(
-        model,
-        input_spec=[
-            paddle.static.InputSpec(
-                shape=[None] + infer_shape, dtype='float32')
-        ])
-    paddle.jit.save(model, save_path)
-    logger.info('pruned model is saved to {}'.format(save_path))
-    
-    # Calculate model size
-    model_size = get_size(os.path.join(save_path + '.pdiparams')) + get_size(os.path.join(save_path + '.pdmodel'))
-    logger.info('pruned model size is {}'.format(model_size))
 
 if __name__ == '__main__':
     config, device, logger, vdl_writer = program.preprocess(is_train=True)

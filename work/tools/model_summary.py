@@ -25,7 +25,7 @@ from collections import OrderedDict
 __all__ = ['summary']
 
 
-def summary(net, input_size, dtypes=None, logger=None):
+def summary(net, input_size, dtypes=None, logger=None, use_srn=False):
     """Prints a string summary of the network.
 
     Args:
@@ -146,7 +146,7 @@ def summary(net, input_size, dtypes=None, logger=None):
             return [_check_input(i) for i in input_size]
 
     _input_size = _check_input(_input_size)
-    result, params_info = summary_string(net, _input_size, dtypes)
+    result, params_info = summary_string(net, _input_size, dtypes, use_srn)
     if logger:
         logger.info(result)
     else:
@@ -159,7 +159,7 @@ def summary(net, input_size, dtypes=None, logger=None):
 
 
 @paddle.no_grad()
-def summary_string(model, input_size, dtypes=None):
+def summary_string(model, input_size, dtypes=None, use_srn=False):
     def _all_is_numper(items):
         for item in items:
             if not isinstance(item, numbers.Number):
@@ -276,7 +276,10 @@ def summary_string(model, input_size, dtypes=None):
     model.apply(register_hook)
 
     # make a forward pass
-    model(x[0],x[-4:])
+    if use_srn:
+        model(x[0],x[-4:])
+    else:
+        model(*x)
 
     # remove these hooks
     for h in hooks:
