@@ -83,7 +83,12 @@ def main(config, device, logger, vdl_writer):
     use_srn = config['Architecture']['algorithm'] == "SRN"
     if use_srn:
         from ppocr.data.imaug.rec_img_aug import srn_other_inputs
-        shape = config['Train']['dataset']['transforms'][2]['SRNRecResizeImg']['image_shape']
+        for opp in config['Train']['dataset']['transforms']:
+            if 'SRNRecResizeImg' in opp:
+                shape = opp['SRNRecResizeImg']['image_shape']
+                break
+            else:
+                shape = None
         num_heads = config['Architecture']['Head']['num_heads']
         max_text_length = config['Architecture']['Head']['max_text_length']
         others = srn_other_inputs(shape, num_heads, max_text_length)
@@ -99,8 +104,13 @@ def main(config, device, logger, vdl_writer):
         input_dtype.append('float32')
         summary(model,input_size,input_dtype,logger)
     else:
-        shape = config['Train']['dataset']['transforms'][3]['RecResizeImg']['image_shape']
-        paddle.summary(model, (1, shape[0], shape[1], shape[2]))
+        for opp in config['Train']['dataset']['transforms']:
+            if 'RecResizeImg' in opp:
+                shape = opp['RecResizeImg']['image_shape']
+                break
+            else:
+                shape = None
+        summary(model, (1, shape[0], shape[1], shape[2]),logger=logger)
 
     # build loss
     loss_class = build_loss(config['Loss'])
