@@ -72,9 +72,9 @@ result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 ## Performance
 |Algorithm|Backbone|Neck|Trick|Socre|Model Size|Model Link|
 |---|---|---|---|---|---|---|
-|CRNN|MobileNetV3-small-1.0|48GRU|None|0.6836|6.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_small_1.0)|
-|CRNN|MobileNetV3-small-1.0|48GRU|SE->CA|0.6786|5.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_ca_small_1.0)|
-|CRNN|ResNet18|64GRU|Prune 90% FLOPs|0.7177|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_64_prune_0.9)|
-|CRNN|ResNet18SE|64GRU|Prune 91% FLOPs|**0.7202**|9.8MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18se_64_prune_0.91)|
-|CRNN|ResNet18|48GRU|Prune 90% FLOPs|0.7076|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_48_prune_0.9)|
-|CRNN|ResNet18SE|48GRU|Prune 90% FLOPs|0.7087|9.1MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18se_48_prune_0.9)|
+|CRNN|MobileNetV3-small-1.0|48BiGRU|None|0.6836|6.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_small_1.0)|
+|CRNN|MobileNetV3-small-1.0|48BiGRU|SE->CA|0.6786|5.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_ca_small_1.0)|
+|CRNN|ResNet18|64BiGRU|Prune 90% FLOPs|0.7177|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_64_prune_0.9)|
+|CRNN|ResNet18SE|64BiGRU|Prune 91% FLOPs|**0.7202**|9.8MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18se_64_prune_0.91)|
+|CRNN|ResNet18|48BiGRU|Prune 90% FLOPs|0.7076|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_48_prune_0.9)|
+|CRNN|ResNet18SE|48BiGRU|Prune 90% FLOPs|0.7087|9.1MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18se_48_prune_0.9)|
