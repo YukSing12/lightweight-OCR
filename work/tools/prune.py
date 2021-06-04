@@ -40,25 +40,6 @@ from paddle.jit import to_static
 import numpy as np
 from paddleslim.dygraph import FPGMFilterPruner
 
-
-def get_size(file_path):
-    """ Get size of file or directory.
-
-    Args:
-        file_path(str): Path of file or directory.
-
-    Returns: 
-        size(int): Size of file or directory in bits.
-    """
-    size = 0
-    if os.path.isdir(file_path):
-        for root, dirs, files in os.walk(file_path):
-            for f in files:
-                size += os.path.getsize(os.path.join(root, f))
-    elif os.path.isfile(file_path):
-        size = (os.path.getsize(file_path))
-    return size
-
 def main():
     global_config = config['Global']
     # Build dataloader

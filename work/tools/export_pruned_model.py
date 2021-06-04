@@ -38,7 +38,25 @@ import paddle
 from paddle.jit import to_static
 import numpy as np
 from paddleslim.dygraph import FPGMFilterPruner
-from prune import get_size
+
+
+def get_size(file_path):
+    """ Get size of file or directory.
+
+    Args:
+        file_path(str): Path of file or directory.
+
+    Returns: 
+        size(int): Size of file or directory in bits.
+    """
+    size = 0
+    if os.path.isdir(file_path):
+        for root, dirs, files in os.walk(file_path):
+            for f in files:
+                size += os.path.getsize(os.path.join(root, f))
+    elif os.path.isfile(file_path):
+        size = (os.path.getsize(file_path))
+    return size
 
 def main():
     global_config = config['Global']
@@ -130,7 +148,7 @@ def main():
     
     # Calculate model size
     model_size = get_size(os.path.join(save_path + '.pdiparams')) + get_size(os.path.join(save_path + '.pdmodel'))
-    logger.info('pruned model size is {}MB'.format(model_size/1000/1000))
+    logger.info('pruned model size is {}MB'.format(model_size/1024/1024))
 
 if __name__ == '__main__':
     config, device, logger, vdl_writer = program.preprocess(is_train=True)

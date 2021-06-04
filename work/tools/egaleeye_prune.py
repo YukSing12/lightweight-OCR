@@ -237,7 +237,7 @@ def main():
     
     # Calculate model size
     model_size = get_size(os.path.join(save_path + '.pdiparams')) + get_size(os.path.join(save_path + '.pdmodel'))
-    logger.info('pruned model size is {}'.format(model_size))
+    logger.info('pruned model size is {}MB'.format(model_size/1000/1000))
         
 
 if __name__ == '__main__':

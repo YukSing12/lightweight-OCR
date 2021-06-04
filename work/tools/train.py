@@ -94,14 +94,9 @@ def main(config, device, logger, vdl_writer):
         others = srn_other_inputs(shape, num_heads, max_text_length)
         input_size = []
         input_size.append((1, shape[0], shape[1], shape[2]))
-        input_dtype = []
-        input_dtype.append('float32')
+        input_dtype = ['float32','int64','int64''float32','float32']
         for item in others:
             input_size.append((1,) + item.shape)
-        input_dtype.append('int64')
-        input_dtype.append('int64')
-        input_dtype.append('float32')
-        input_dtype.append('float32')
         summary(model,input_size,input_dtype,logger)
     else:
         for opp in config['Train']['dataset']['transforms']:
