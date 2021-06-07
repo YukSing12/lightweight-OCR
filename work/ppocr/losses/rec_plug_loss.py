@@ -54,7 +54,7 @@ class PlugLoss(nn.Layer):
         sr_loss = self.sr_loss_func(frn_I, frn_blur_I)
 
         loss = rec_loss + self.lambda_factor * sr_loss  # sum
-        return {'loss': loss}
+        return {'loss': loss, 'rec_loss': rec_loss, 'sr_loss': sr_loss}
 
     def get_blur(self,I,p1,p2):
         if p1 >= self.alpha and p2 >= self.alpha:
