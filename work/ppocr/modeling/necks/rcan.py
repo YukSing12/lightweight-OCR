@@ -105,7 +105,6 @@ class RCAN(nn.Layer):
         n_feats = 64
         kernel_size = 3
         reduction = 16
-        scale = 4
         act = nn.ReLU(True)
 
         # define body module
@@ -117,8 +116,17 @@ class RCAN(nn.Layer):
         modules_body.append(conv(n_feats, n_feats, kernel_size))
 
         # define tail module
+        scale = (32,4)
         modules_tail = [
-            Upsampler(conv, scale, n_feats, act=False),
+            nn.Upsample(scale_factor=(2,2), mode='nearest'),
+            conv(n_feats, n_feats, kernel_size),
+            nn.Upsample(scale_factor=(2,1), mode='nearest'),
+            conv(n_feats, n_feats, kernel_size),
+            nn.Upsample(scale_factor=(2,1), mode='nearest'),
+            conv(n_feats, n_feats, kernel_size),
+            nn.Upsample(scale_factor=(2,1), mode='nearest'),
+            conv(n_feats, n_feats, kernel_size),
+            nn.Upsample(scale_factor=(2,2), mode='nearest'),
             conv(n_feats, 3, kernel_size)]
 
         self.conv1 = conv(in_channels, n_feats, kernel_size=1)

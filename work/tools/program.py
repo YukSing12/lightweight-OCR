@@ -219,8 +219,8 @@ def train(config,
                 p1 = np.random.rand(1)
                 p2 = np.random.rand(1)
                 blur_I = loss_class.get_blur(images,p1,p2)
-                frn_blur_I = model(blur_I)
-                loss = loss_class(preds, batch, frn_blur_I[1])
+                psu_blur_I = model(blur_I)
+                loss = loss_class(preds, batch, psu_blur_I[1])
                 preds = preds[0]
             else:
                 loss = loss_class(preds, batch)

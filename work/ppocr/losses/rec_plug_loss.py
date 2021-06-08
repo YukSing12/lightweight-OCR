@@ -40,10 +40,9 @@ class PlugLoss(nn.Layer):
                       trainable=False
                   ))
 
-    def __call__(self, predicts, batch, frn_blur_I):
-        frn_I = predicts[1]
+    def __call__(self, predicts, batch, psu_blur_I):
         predicts = predicts[0]
-
+        I = batch[0]
         predicts = predicts.transpose((1, 0, 2))
         N, B, _ = predicts.shape
         preds_lengths = paddle.to_tensor([N] * B, dtype='int64')
@@ -51,7 +50,7 @@ class PlugLoss(nn.Layer):
         label_lengths = batch[2].astype('int64')
         rec_loss = self.rec_loss_func(predicts, labels, preds_lengths, label_lengths).mean()
 
-        sr_loss = self.sr_loss_func(frn_I, frn_blur_I)
+        sr_loss = self.sr_loss_func(I, psu_blur_I)
 
         loss = rec_loss + self.lambda_factor * sr_loss  # sum
         return {'loss': loss, 'rec_loss': rec_loss, 'sr_loss': sr_loss}
