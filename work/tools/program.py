@@ -279,7 +279,8 @@ def train(config,
                     valid_dataloader,
                     post_process_class,
                     eval_class,
-                    use_srn=use_srn)
+                    use_srn=use_srn,
+                    use_psu=use_psu)
                 cur_metric_str = 'cur metric, {}'.format(', '.join(
                     ['{}: {}'.format(k, v) for k, v in cur_metric.items()]))
                 logger.info(cur_metric_str)
@@ -347,7 +348,7 @@ def train(config,
 
 
 def eval(model, valid_dataloader, post_process_class, eval_class,
-         use_srn=False):
+         use_srn=False, use_psu=False):
     model.eval()
     with paddle.no_grad():
         total_frame = 0.0
@@ -366,6 +367,7 @@ def eval(model, valid_dataloader, post_process_class, eval_class,
                 preds = model(images, others)
             else:
                 preds = model(images)
+                preds = preds[0] if use_psu else preds
 
             batch = [item.numpy() for item in batch]
             # Obtain usable results from post-processing methods
