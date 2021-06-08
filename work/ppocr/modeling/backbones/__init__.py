@@ -25,12 +25,14 @@ def build_backbone(config, model_type):
         from .rec_mobilenet_v3 import MobileNetV3
         from .rec_mobilenet_v3_acon import MobileNetV3_ACON
         from .rec_mobilenet_v3_ca import MobileNetV3_CA
+        from .rec_mobilenet_v3_fpn_blurpool import MobileNetV3_FPN_BP
         from .rec_resnet_vd import ResNet
         from .rec_resnet_vd_se import ResNetSE
         from .rec_rednet_vd import RedNet
         from .rec_resnet_fpn import ResNetFPN
         from .rec_resnet_se_metaacon import ResNetSE_MetaAcon
-        support_dict = ['MobileNetV3', 'MobileNetV3_ACON', 'MobileNetV3_CA', 'ResNet', 'ResNetSE', 'ResNetFPN', 'RedNet', 'ResNetSE_MetaAcon']
+        support_dict = ['MobileNetV3', 'MobileNetV3_ACON', 'MobileNetV3_CA', 'MobileNetV3_FPN_BP',
+        'ResNet', 'ResNetSE', 'ResNetFPN', 'RedNet', 'ResNetSE_MetaAcon']
     elif model_type == 'e2e':
         from .e2e_resnet_vd_pg import ResNet
         support_dict = ['ResNet']
