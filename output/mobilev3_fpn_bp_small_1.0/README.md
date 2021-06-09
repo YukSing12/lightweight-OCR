@@ -1,3 +1,5 @@
+# Replace MaxPool by BlurPool
+Please refer to article *Making Convolutional Networks Shift-Invariant Again* [[pdf]](https://arxiv.org/abs/1904.11486) for more details.
 # Model summary
 ```
 -------------------------------------------------------------------------------------
