@@ -116,17 +116,9 @@ class RCAN(nn.Layer):
         modules_body.append(conv(n_feats, n_feats, kernel_size))
 
         # define tail module
-        scale = (32,4)
+        scale = 4
         modules_tail = [
-            nn.Upsample(scale_factor=(2,2), mode='nearest'),
-            conv(n_feats, n_feats, kernel_size),
-            nn.Upsample(scale_factor=(2,1), mode='nearest'),
-            conv(n_feats, n_feats, kernel_size),
-            nn.Upsample(scale_factor=(2,1), mode='nearest'),
-            conv(n_feats, n_feats, kernel_size),
-            nn.Upsample(scale_factor=(2,1), mode='nearest'),
-            conv(n_feats, n_feats, kernel_size),
-            nn.Upsample(scale_factor=(2,2), mode='nearest'),
+            Upsampler(conv, scale, n_feats, act=False),
             conv(n_feats, 3, kernel_size)]
 
         self.conv1 = conv(in_channels, n_feats, kernel_size=1)
@@ -167,8 +159,3 @@ class RCAN(nn.Layer):
             missing = set(own_state.keys()) - set(state_dict.keys())
             if len(missing) > 0:
                 raise KeyError('missing keys in state_dict: "{}"'.format(missing))
-
-if __name__ == '__main__':
-    rcan = RCAN(in_channels=3)
-    paddle.summary(rcan, (1,3,32,320))
-    pass
