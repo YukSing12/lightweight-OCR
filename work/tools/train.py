@@ -32,6 +32,7 @@ paddle.seed(2)
 
 from ppocr.data import build_dataloader
 from ppocr.modeling.architectures import build_model
+from ppocr.modeling.architectures.plugnet import PlugNet
 from ppocr.losses import build_loss
 from ppocr.optimizer import build_optimizer
 from ppocr.postprocess import build_post_process
@@ -75,7 +76,10 @@ def main(config, device, logger, vdl_writer):
     if hasattr(post_process_class, 'character'):
         char_num = len(getattr(post_process_class, 'character'))
         config['Architecture']["Head"]['out_channels'] = char_num
-    model = build_model(config['Architecture'])
+    if 'PSU' not in config['Architecture'] or config['Architecture']['PSU'] is None:
+        model = build_model(config['Architecture'])
+    else:
+        model = PlugNet(config['Architecture'])
     if config['Global']['distributed']:
         model = paddle.DataParallel(model)
 

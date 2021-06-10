@@ -186,8 +186,7 @@ def train(config,
     model.train()
 
     use_srn = config['Architecture']['algorithm'] == "SRN"
-    use_psu = model.use_psu
-
+    use_psu = 'PSU' in config['Architecture'] and config['Architecture']['PSU'] is not None
     if 'start_epoch' in best_model_dict:
         start_epoch = best_model_dict['start_epoch']
     else:

@@ -21,31 +21,20 @@ from ppocr.modeling.backbones import build_backbone
 from ppocr.modeling.necks import build_neck
 from ppocr.modeling.heads import build_head
 
-__all__ = ['BaseModel']
+__all__ = ['PlugNet']
 
 
-class BaseModel(nn.Layer):
+class PlugNet(nn.Layer):
     def __init__(self, config):
         """
-        the module for OCR.
+        PlugNet module for OCR.
         args:
             config (dict): the super parameters for module.
         """
-        super(BaseModel, self).__init__()
+        super(PlugNet, self).__init__()
 
         in_channels = config.get('in_channels', 3)
         model_type = config['model_type']
-        # build transfrom,
-        # for rec, transfrom can be TPS,None
-        # for det and cls, transfrom shoule to be None,
-        # if you make model differently, you can use transfrom in det and cls
-        if 'Transform' not in config or config['Transform'] is None:
-            self.use_transform = False
-        else:
-            self.use_transform = True
-            config['Transform']['in_channels'] = in_channels
-            self.transform = build_transform(config['Transform'])
-            in_channels = self.transform.out_channels
 
         # build backbone, backbone is need for del, rec and cls
         config["Backbone"]['in_channels'] = in_channels
@@ -64,18 +53,27 @@ class BaseModel(nn.Layer):
             self.neck = build_neck(config['Neck'])
             in_channels = self.neck.out_channels
 
+        # pluggable super-resolution unit (PSU)
+        if 'PSU' not in config or config['PSU'] is None:
+            self.use_psu = False
+        else:
+            self.use_psu = True
+            config['PSU']['in_channels'] = self.backbone.mid_fea_channels
+            self.psu = build_neck(config['PSU'])
+
         # # build head, head is need for det, rec and cls
         config["Head"]['in_channels'] = in_channels
         self.head = build_head(config["Head"])
 
     def forward(self, x, data=None):
-        if self.use_transform:
-            x = self.transform(x)
-        x = self.backbone(x)
+        x,y = self.backbone(x)
         if self.use_neck:
             x = self.neck(x)
-        if data is None:
-            x = self.head(x)
+
+        x = self.head(x)
+
+        if self.use_psu:
+            y = self.psu(y)
+            return x, y
         else:
-            x = self.head(x, data)
-        return x
+            return x
