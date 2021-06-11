@@ -27,6 +27,7 @@ class MobileNetV3_ACON(nn.Layer):
                  in_channels=3,
                  model_name='small',
                  scale=0.5,
+                 act='aconc',
                  large_stride=None,
                  small_stride=None,
                  **kwargs):
@@ -44,41 +45,42 @@ class MobileNetV3_ACON(nn.Layer):
                                        "4 but got {}".format(len(large_stride))
         assert len(small_stride) == 4, "small_stride length must be " \
                                        "4 but got {}".format(len(small_stride))
+        assert act in ["aconc", "metaaconc"], "activation function musb be in {} but got {}".format(["aconc", "metaaconc"], act)
 
         if model_name == "large":
             cfg = [
                 # k, exp, c,  se,     nl,  s,
-                [3, 16, 16, False, 'aconc', large_stride[0]],
-                [3, 64, 24, False, 'aconc', (large_stride[1], 1)],
-                [3, 72, 24, False, 'aconc', 1],
-                [5, 72, 40, True, 'aconc', (large_stride[2], 1)],
-                [5, 120, 40, True, 'aconc', 1],
-                [5, 120, 40, True, 'aconc', 1],
-                [3, 240, 80, False, 'aconc', 1],
-                [3, 200, 80, False, 'aconc', 1],
-                [3, 184, 80, False, 'aconc', 1],
-                [3, 184, 80, False, 'aconc', 1],
-                [3, 480, 112, True, 'aconc', 1],
-                [3, 672, 112, True, 'aconc', 1],
-                [5, 672, 160, True, 'aconc', (large_stride[3], 1)],
-                [5, 960, 160, True, 'aconc', 1],
-                [5, 960, 160, True, 'aconc', 1],
+                [3, 16, 16, False, act, large_stride[0]],
+                [3, 64, 24, False, act, (large_stride[1], 1)],
+                [3, 72, 24, False, act, 1],
+                [5, 72, 40, True, act, (large_stride[2], 1)],
+                [5, 120, 40, True, act, 1],
+                [5, 120, 40, True, act, 1],
+                [3, 240, 80, False, act, 1],
+                [3, 200, 80, False, act, 1],
+                [3, 184, 80, False, act, 1],
+                [3, 184, 80, False, act, 1],
+                [3, 480, 112, True, act, 1],
+                [3, 672, 112, True, act, 1],
+                [5, 672, 160, True, act, (large_stride[3], 1)],
+                [5, 960, 160, True, act, 1],
+                [5, 960, 160, True, act, 1],
             ]
             cls_ch_squeeze = 960
         elif model_name == "small":
             cfg = [
                 # k, exp, c,  se,     nl,  s,
-                [3, 16, 16, True, 'aconc', (small_stride[0], 1)],
-                [3, 72, 24, False, 'aconc', (small_stride[1], 1)],
-                [3, 88, 24, False, 'aconc', 1],
-                [5, 96, 40, True, 'aconc', (small_stride[2], 1)],
-                [5, 240, 40, True, 'aconc', 1],
-                [5, 240, 40, True, 'aconc', 1],
-                [5, 120, 48, True, 'aconc', 1],
-                [5, 144, 48, True, 'aconc', 1],
-                [5, 288, 96, True, 'aconc', (small_stride[3], 1)],
-                [5, 576, 96, True, 'aconc', 1],
-                [5, 576, 96, True, 'aconc', 1],
+                [3, 16, 16, True, act, (small_stride[0], 1)],
+                [3, 72, 24, False, act, (small_stride[1], 1)],
+                [3, 88, 24, False, act, 1],
+                [5, 96, 40, True, act, (small_stride[2], 1)],
+                [5, 240, 40, True, act, 1],
+                [5, 240, 40, True, act, 1],
+                [5, 120, 48, True, act, 1],
+                [5, 144, 48, True, act, 1],
+                [5, 288, 96, True, act, (small_stride[3], 1)],
+                [5, 576, 96, True, act, 1],
+                [5, 576, 96, True, act, 1],
             ]
             cls_ch_squeeze = 576
         else:
@@ -99,7 +101,7 @@ class MobileNetV3_ACON(nn.Layer):
             padding=1,
             groups=1,
             if_act=True,
-            act='aconc',
+            act=act,
             name='conv1')
         i = 0
         block_list = []
@@ -127,7 +129,7 @@ class MobileNetV3_ACON(nn.Layer):
             padding=0,
             groups=1,
             if_act=True,
-            act='aconc',
+            act=act,
             name='conv_last')
 
         self.pool = nn.MaxPool2D(kernel_size=2, stride=2, padding=0)
