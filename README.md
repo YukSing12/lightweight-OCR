@@ -74,6 +74,7 @@ result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 |---|---|---|---|---|---|---|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|None|0.6836|6.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|SE->CA|0.6786|5.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_ca_small_1.0)|
+|CRNN|MobileNetV3-small-1.0|48BiGRU|ReLu, H-Swish -> MetaAconC|0.6787|10.5MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_metaaconc_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-A|0.7161|4.8MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpn_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-B|**0.7248**|7.5MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpnb_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-A, MaxPool->BlurPool|0.7145|4.8MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpn_bp_small_1.0)|
