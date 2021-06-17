@@ -84,3 +84,4 @@ result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 |CRNN|ResNet18|48BiGRU|Prune 90% FLOPs|0.7076|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_48_prune_0.9)|
 |CRNN|ResNet18SE|48BiGRU|Prune 90% FLOPs|0.7087|9.1MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18se_48_prune_0.9)|
 |RARE|MobileNetV3-samll-0.5|32BiGRU|Remove TPS|0.4329|9.2MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/rare_mv3_small_0.5_32bigru_att)|
+|Star|MobileNetV3-samll-1.0|48BiGRU|FPN-B|0.7093|15.4MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/star_mv3_fpnb_small_1.0)|
