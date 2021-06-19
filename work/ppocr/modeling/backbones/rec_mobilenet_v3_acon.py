@@ -33,7 +33,7 @@ class MobileNetV3_ACON(nn.Layer):
                  **kwargs):
         super(MobileNetV3_ACON, self).__init__()
         if small_stride is None:
-            small_stride = [2, 2, 2, 2]
+            small_stride = [1, 2, 2, 2]
         if large_stride is None:
             large_stride = [1, 2, 2, 2]
 
@@ -51,9 +51,9 @@ class MobileNetV3_ACON(nn.Layer):
             cfg = [
                 # k, exp, c,  se,     nl,  s,
                 [3, 16, 16, False, act, large_stride[0]],
-                [3, 64, 24, False, act, (large_stride[1], 1)],
+                [3, 64, 24, False, 'relu', (large_stride[1], 1)],
                 [3, 72, 24, False, act, 1],
-                [5, 72, 40, True, act, (large_stride[2], 1)],
+                [5, 72, 40, True, 'relu', (large_stride[2], 1)],
                 [5, 120, 40, True, act, 1],
                 [5, 120, 40, True, act, 1],
                 [3, 240, 80, False, act, 1],
@@ -62,7 +62,7 @@ class MobileNetV3_ACON(nn.Layer):
                 [3, 184, 80, False, act, 1],
                 [3, 480, 112, True, act, 1],
                 [3, 672, 112, True, act, 1],
-                [5, 672, 160, True, act, (large_stride[3], 1)],
+                [5, 672, 160, True, 'hardswish', (large_stride[3], 1)],
                 [5, 960, 160, True, act, 1],
                 [5, 960, 160, True, act, 1],
             ]
@@ -70,15 +70,15 @@ class MobileNetV3_ACON(nn.Layer):
         elif model_name == "small":
             cfg = [
                 # k, exp, c,  se,     nl,  s,
-                [3, 16, 16, True, act, (small_stride[0], 1)],
-                [3, 72, 24, False, act, (small_stride[1], 1)],
+                [3, 16, 16, True, act, small_stride[0]],
+                [3, 72, 24, False, 'relu', (small_stride[1], 1)],
                 [3, 88, 24, False, act, 1],
-                [5, 96, 40, True, act, (small_stride[2], 1)],
+                [5, 96, 40, True, 'hardswish', (small_stride[2], 1)],
                 [5, 240, 40, True, act, 1],
                 [5, 240, 40, True, act, 1],
                 [5, 120, 48, True, act, 1],
                 [5, 144, 48, True, act, 1],
-                [5, 288, 96, True, act, (small_stride[3], 1)],
+                [5, 288, 96, True, 'hardswish', (small_stride[3], 1)],
                 [5, 576, 96, True, act, 1],
                 [5, 576, 96, True, act, 1],
             ]
@@ -101,7 +101,7 @@ class MobileNetV3_ACON(nn.Layer):
             padding=1,
             groups=1,
             if_act=True,
-            act=act,
+            act='relu',
             name='conv1')
         i = 0
         block_list = []
