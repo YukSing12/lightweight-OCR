@@ -78,7 +78,8 @@ result file will be saved in output/%Y-%m-%d-%H-%M-%S.log.
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-A|0.7161|4.8MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpn_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-B|0.7248|7.5MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpnb_small_1.0)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-C|0.7290|7.3MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpnc_small_1.0)|
-|CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-D|**0.7319**|8.5MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpnd_small_1.0)|
+|CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-D|0.7319|8.5MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpnd_small_1.0)|
+|CRNN|MobileNetV3-large-0.5|72BiGRU|FPN-D|**0.735**|9.3MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpnd_large_0.5)|
 |CRNN|MobileNetV3-small-1.0|48BiGRU|FPN-A, MaxPool->BlurPool|0.7145|4.8MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpn_bp_small_1.0)|
 |CRNN|MobileNetV3-large-0.5|96BiGRU|FPN-A, 200epoch->500epoch|0.7243|7.6MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/mobilev3_fpn_large_0.5_96bigru)|
 |CRNN|ResNet18|64BiGRU|Prune 90% FLOPs|0.7177|8.9MB|[link](https://github.com/YukSing12/lightweight-OCR/tree/main/output/resnet18_64_prune_0.9)|
