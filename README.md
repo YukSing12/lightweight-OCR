@@ -36,39 +36,39 @@ We also try to replace [SE](https://arxiv.org/abs/1709.01507) module by [CA](htt
 [MobileNetV3](https://arxiv.org/abs/1905.02244).
 
 #### **FPN**
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
 Inspired by [Feature Pyramid Networks(FPN)](https://arxiv.org/abs/1612.03144) and [Dynamic Feature Pyramid Networks(DyFPN)](https://arxiv.org/abs/2012.00779), we designed four FPNs to aggregate multi-scale feature information in recognition model. 
 
 
 ##### **FPN-A, FPN-B**
-We use $\oplus$ to denote concatenation here. Given a list of input features with different scales $\{F3, F4, F5\}$, the output features $\{P3, P4, P5\}$ are aggregated as 
+We use <a href="https://www.codecogs.com/eqnedit.php?latex=\oplus" target="_blank"><img src="https://latex.codecogs.com/png.latex?\oplus" title="\oplus" /></a> to denote concatenation here. Given a list of input features with different scales <a href="https://www.codecogs.com/eqnedit.php?latex=\{F3,F4,F5\}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\{F3,F4,F5\}" title="\{F3,F4,F5\}" /></a>, the output features <a href="https://www.codecogs.com/eqnedit.php?latex=\{P3,P4,P5\}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\{P3,P4,P5\}" title="\{P3,P4,P5\}" /></a> are aggregated as 
 
-$$P_5 = F_5$$
-$$P_l = f_l(F_l \oplus R(F_{l+1})), l = 3,4$$
-where $l$ denotes the level of pyramid. $f_l$ denotes $3\times 3$ convolution operation with different strides. $R$ denotes the resizing operation i.e. upsampling with a scale factor of (2,1). 
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=P_5&space;=&space;F_5" target="_blank"><img src="https://latex.codecogs.com/png.latex?P_5&space;=&space;F_5" title="P_5 = F_5" /></a></div>
 
-Finally we sums the aggregated features to get output $O$ as:
-$$O = P_5 \oplus P_4 \oplus P_3$$
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=P_l&space;=&space;f_l(F_l&space;\oplus&space;R(F_{l&plus;1})),&space;l&space;=&space;3,4" target="_blank"><img src="https://latex.codecogs.com/png.latex?P_l&space;=&space;f_l(F_l&space;\oplus&space;R(F_{l&plus;1})),&space;l&space;=&space;3,4" title="P_l = f_l(F_l \oplus R(F_{l+1})), l = 3,4" /></a></div>
 
-In FPN-A, input features $\{F3, F4, F5\}$ come from the first feature in state $\{3, 4, 5\}$ whereas in FPN-B, input features come from the last feature in state $\{3, 4, 5\}$.
+where <a href="https://www.codecogs.com/eqnedit.php?latex=l" target="_blank"><img src="https://latex.codecogs.com/png.latex?l" title="l" /></a> denotes the level of pyramid. <a href="https://www.codecogs.com/eqnedit.php?latex=f_l" target="_blank"><img src="https://latex.codecogs.com/png.latex?f_l" title="f_l" /></a> denotes <a href="https://www.codecogs.com/eqnedit.php?latex=3\times&space;3" target="_blank"><img src="https://latex.codecogs.com/png.latex?3\times&space;3" title="3\times 3" /></a> convolution operation with different strides. <a href="https://www.codecogs.com/eqnedit.php?latex=R" target="_blank"><img src="https://latex.codecogs.com/png.latex?R" title="R" /></a> denotes the resizing operation i.e. upsampling with a scale factor of (2,1). 
+
+Finally we sums the aggregated features to get output <a href="https://www.codecogs.com/eqnedit.php?latex=O" target="_blank"><img src="https://latex.codecogs.com/png.latex?O" title="O" /></a> as:
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=O&space;=&space;P_5&space;\oplus&space;P_4&space;\oplus&space;P_3" target="_blank"><img src="https://latex.codecogs.com/png.latex?O&space;=&space;P_5&space;\oplus&space;P_4&space;\oplus&space;P_3" title="O = P_5 \oplus P_4 \oplus P_3" /></a></div>
+
+In FPN-A, input features <a href="https://www.codecogs.com/eqnedit.php?latex=\{F3,F4,F5\}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\{F3,F4,F5\}" title="\{F3,F4,F5\}" /></a> come from the first feature in state <a href="https://www.codecogs.com/eqnedit.php?latex=\{3,&space;4,&space;5\}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\{3,&space;4,&space;5\}" title="\{3, 4, 5\}" /></a> whereas in FPN-B, input features come from the last feature in state <a href="https://www.codecogs.com/eqnedit.php?latex=\{3,&space;4,&space;5\}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\{3,&space;4,&space;5\}" title="\{3, 4, 5\}" /></a>.
 
 FPN-A achieved an accuracy of 0.7161 and allocated 4.8MB, whereas FPN-B achieved an accuracy of 0.7248 and allocated 7.5MB. The structures of FPN-A and FPN-B are shown below.
 <img src=./images/FPNAB.png width="100%">
 
 ##### **FPN-C**
-We redefine aggregated features $\{P3, P4, P5\}$ and output $O$ as
-$$P_5 = F_5$$
-$$P_l = Conv_{1\times 1}(F_l \oplus R(P_{l+1})), l = 3,4$$
-$$O = P_5 \oplus f_4(P_4) \oplus f_3(P_3)$$
-where $Conv_{1\times 1}$ is $1\times 1$ convolution operation with different output channels.
+We redefine aggregated features <a href="https://www.codecogs.com/eqnedit.php?latex=\{P3,&space;P4,&space;P5\}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\{P3,&space;P4,&space;P5\}" title="\{P3, P4, P5\}" /></a> and output <a href="https://www.codecogs.com/eqnedit.php?latex=O" target="_blank"><img src="https://latex.codecogs.com/png.latex?O" title="O" /></a> as
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=P_5&space;=&space;F_5" target="_blank"><img src="https://latex.codecogs.com/png.latex?P_5&space;=&space;F_5" title="P_5 = F_5" /></a></div>
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=P_l&space;=&space;Conv_{1\times&space;1}(F_l&space;\oplus&space;R(P_{l&plus;1})),&space;l&space;=&space;3,4" target="_blank"><img src="https://latex.codecogs.com/png.latex?P_l&space;=&space;Conv_{1\times&space;1}(F_l&space;\oplus&space;R(P_{l&plus;1})),&space;l&space;=&space;3,4" title="P_l = Conv_{1\times 1}(F_l \oplus R(P_{l+1})), l = 3,4" /></a></div>
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=O&space;=&space;P_5&space;\oplus&space;f_4(P_4)&space;\oplus&space;f_3(P_3)" target="_blank"><img src="https://latex.codecogs.com/png.latex?O&space;=&space;P_5&space;\oplus&space;f_4(P_4)&space;\oplus&space;f_3(P_3)" title="O = P_5 \oplus f_4(P_4) \oplus f_3(P_3)" /></a></div>
+where <a href="https://www.codecogs.com/eqnedit.php?latex=Conv_{1\times&space;1}" target="_blank"><img src="https://latex.codecogs.com/png.latex?Conv_{1\times&space;1}" title="Conv_{1\times 1}" /></a> is <a href="https://www.codecogs.com/eqnedit.php?latex=1\times&space;1" target="_blank"><img src="https://latex.codecogs.com/png.latex?1\times&space;1" title="1\times 1" /></a> convolution operation with different output channels.
 Compared to FPN-B, FPN-C improved accuracy to 0.7290 with allocated size of 7.3MB.
 The structure of FPN-C is shown below.
 <img src=./images/FPNC.png width="100%">
 
 ##### **FPN-D**
-Inspired by [DyFPN](https://arxiv.org/abs/2012.00779), $P_l$ is added by more convolution operations with three different kernel size as:
-$$P_l = Conv_{1\times 1}(F_l \oplus R(P_{l+1})) + Conv_{3\times 3}(F_l \oplus R(P_{l+1})) + Conv_{5\times 5}(F_l \oplus R(P_{l+1})), l = 3,4$$
+Inspired by [DyFPN](https://arxiv.org/abs/2012.00779), <a href="https://www.codecogs.com/eqnedit.php?latex=P_l" target="_blank"><img src="https://latex.codecogs.com/png.latex?P_l" title="P_l" /></a> is added by more convolution operations with three different kernel size as:
+<div align=center><a href="https://www.codecogs.com/eqnedit.php?latex=P_l&space;=&space;Conv_{1\times&space;1}(F_l&space;\oplus&space;R(P_{l&plus;1}))&space;&plus;&space;Conv_{3\times&space;3}(F_l&space;\oplus&space;R(P_{l&plus;1}))&space;&plus;&space;Conv_{5\times&space;5}(F_l&space;\oplus&space;R(P_{l&plus;1})),&space;l&space;=&space;3,4" target="_blank"><img src="https://latex.codecogs.com/png.latex?P_l&space;=&space;Conv_{1\times&space;1}(F_l&space;\oplus&space;R(P_{l&plus;1}))&space;&plus;&space;Conv_{3\times&space;3}(F_l&space;\oplus&space;R(P_{l&plus;1}))&space;&plus;&space;Conv_{5\times&space;5}(F_l&space;\oplus&space;R(P_{l&plus;1})),&space;l&space;=&space;3,4" title="P_l = Conv_{1\times 1}(F_l \oplus R(P_{l+1})) + Conv_{3\times 3}(F_l \oplus R(P_{l+1})) + Conv_{5\times 5}(F_l \oplus R(P_{l+1})), l = 3,4" /></a></div>
 FPN-D reached highest accuracy of 0.7319 with allocated size of 8.5MB.
 The structure of FPN-D is shown below.
 <img src=./images/FPND.png width="100%">
