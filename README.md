@@ -32,8 +32,7 @@ We also try to replace [SE](https://arxiv.org/abs/1709.01507) module by [CA](htt
 <img src=./images/SE_CA.png width="100%">
 
 #### **Meta-ACON**
-[MobileNetV3](https://arxiv.org/abs/1905.02244) introduces a new, fast, and quantization-friendly nonlinearity, h-swish function. Recently, [TFNet](https://arxiv.org/abs/2009.04759) proposed a novel activation function called [ACON](https://arxiv.org/abs/2009.04759) that explicitly learns to **AC**tivate the neurons **O**r **N**ot. [ACON-C](https://arxiv.org/abs/2009.04759) function contains three learnable parameters p1, p2, and beta while [MetaACON-C](https://arxiv.org/abs/2009.04759) build a small network to learn beta. We try to replace HSwish and Relu with [MetaACON-C](https://arxiv.org/abs/2009.04759), and we found that it is slower in back-propagation. The accuracy is 0.6787, and the allocated size is 10.5MB. We think we should redesign [MetaACON-C](https://arxiv.org/abs/2009.04759) in 
-[MobileNetV3](https://arxiv.org/abs/1905.02244).
+[MobileNetV3](https://arxiv.org/abs/1905.02244) introduces a new, fast, and quantization-friendly nonlinearity, h-swish function. Recently, [TFNet](https://arxiv.org/abs/2009.04759) proposed a novel activation function called [ACON](https://arxiv.org/abs/2009.04759) that explicitly learns to **AC**tivate the neurons **O**r **N**ot. [ACON-C](https://arxiv.org/abs/2009.04759) function contains three learnable parameters p1, p2, and beta while [MetaACON-C](https://arxiv.org/abs/2009.04759) build a small network to learn beta. We try to replace HSwish and Relu with [MetaACON-C](https://arxiv.org/abs/2009.04759), and we found that it is slower in back-propagation. The accuracy is 0.6787, and the allocated size is 10.5MB. Further experimental investigations are needed to estimate the practicality of [MetaACON-C](https://arxiv.org/abs/2009.04759).
 
 #### **FPN**
 Inspired by [Feature Pyramid Networks(FPN)](https://arxiv.org/abs/1612.03144) and [Dynamic Feature Pyramid Networks(DyFPN)](https://arxiv.org/abs/2012.00779), we designed four FPNs to aggregate multi-scale feature information in recognition model. 
@@ -73,6 +72,14 @@ FPN-D reached highest accuracy of 0.7319 with allocated size of 8.5MB.
 The structure of FPN-D is shown below.
 <img src=./images/FPND.png width="100%">
 
+### **Implementation Details**
+Details of different models can refer to [Table](#performance).
+
+We use Adam optimizer with parameters beta1 of 0.9 and beta2 of 0.999 to train all models for 200 epochs, setting learning rate to 0.001, regularization parameter to 1e-5 and adpoting cosine learning rate schedule. 
+
+### **Conclusion**
+This project was undertaken to obtain a lightweight model from model pruning and compact model designing. One of the more significant findings to emerge from this project is that [Feature Pyramid Networks(FPN)](https://arxiv.org/abs/1612.03144) outputs aggregated features and helps to imrpove the recognition accuracy. Our final model reaches a training accuracy of 0.9670625 but a test accuracy of 0.735, which occurs overfitting. Therefore, the project was limited in several ways. First, the hyperparameters of training are not optimal. Adjust regularization parameter might alleviate overfitting. Second, the data is not preprocessed well. Data cleaning and data augmentation technology, e.g., removing dirty data, generating more data, can improve accuracy. Third, the neck and head of the model can be further optimized. Inspired by [PlugNet](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123600154.pdf), we also try to plug in a super-resolution unit to solve the low-quality text recognition problem but did not obtain a considerable result.
+
 ## Overall Directory Structure
 The overall directory structure of lightweight-OCR is introduced as follows:
 
@@ -102,8 +109,6 @@ lightweight-OCR
         ├── prune.py
         └── train.py
 ```
-
-## Todo list    
 
 ## Installation   
 
